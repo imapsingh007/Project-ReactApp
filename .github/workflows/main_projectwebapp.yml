@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'  # Updated to Node.js 16
+        node-version: '16'
 
     - name: Install dependencies
       run: |
@@ -37,8 +37,6 @@ jobs:
 
     - name: Run audit and apply fixes
       run: |
-        npm audit fix
-        # Avoid forced breaking changes that downgrade react-scripts
         npm audit fix --only=production  # Apply only the fixes that do not introduce breaking changes
 
     - name: Build application
