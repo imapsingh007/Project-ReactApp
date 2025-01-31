@@ -19,10 +19,13 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '14'
+        node-version: '16'  # Updated to Node.js 16
 
     - name: Install dependencies
-      run: npm install
+      run: |
+        npm install
+        # Install dependencies and update browserslist db
+        npx update-browserslist-db@latest
 
     - name: Manually fix vulnerabilities
       run: |
@@ -44,8 +47,17 @@ jobs:
     - name: Run tests
       run: npm run test --if-present
 
+    - name: Login to Azure
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7FA565814271486193F01FAB906028B8 }}
+        tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_57B9E131A8D64671B5A8A020F32DEE2F }}
+        subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CBF0DDD18E0A47DC83EFDE5B4EA9F28E }}
+
     - name: Deploy to Azure Web App
-      run: |
-        # Add your deployment steps here
-        echo "Deploying React App to Azure Web App"
-        # Example: az webapp deployment source config --name <app_name> --resource-group <resource_group> --src-path ./build
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'projectwebapp'  # Replace with your Azure Web App name
+        slot-name: 'Production'    # You can adjust this for different slots if needed
+        package: './build'  # Deploy the build folder to Azure
