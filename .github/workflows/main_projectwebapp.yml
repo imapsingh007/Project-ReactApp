@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read # This is required for actions/checkout
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -20,16 +20,10 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Install dependencies
+      - name: Install dependencies and audit
         run: |
           npm install
-          npm audit fix --force  # This fixes any vulnerabilities if applicable
-
-      - name: Update Browserslist Database
-        run: npx update-browserslist-db@latest
-
-      - name: npm run build and test
-        run: |
+          npm audit fix --force # Apply fixes for vulnerabilities
           npm run build --if-present
           npm run test --if-present
 
@@ -49,8 +43,8 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: read # This is required for actions/checkout
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
 
     steps:
       - name: Download artifact from build job
