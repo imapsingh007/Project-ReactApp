@@ -1,71 +1,51 @@
-name: Build and deploy Node.js app to Azure Web App - projectwebapp
+name: Build and Deploy React App
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
-      - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '14'
 
-      - name: Install dependencies and audit
-        run: |
-          npm install
-          npm audit fix --force # Apply fixes for vulnerabilities
-          npm run build --if-present
-          npm run test --if-present
+    - name: Install dependencies
+      run: npm install
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+    - name: Manually fix vulnerabilities
+      run: |
+        npm install serialize-javascript@^4.0.0
+        npm install shell-quote@^1.8.0
+        npm install sockjs@^0.3.20
+        npm install terser@^4.8.1
+        npm install webpack-dev-middleware@^5.3.4
+        npm install yargs-parser@^13.1.2
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-app
-          path: release.zip
+    - name: Run audit and apply fixes
+      run: |
+        npm audit fix
+        npm audit fix --force  # Apply breaking changes fixes if necessary
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+    - name: Build application
+      run: npm run build
 
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
+    - name: Run tests
+      run: npm run test --if-present
 
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7FA565814271486193F01FAB906028B8 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_57B9E131A8D64671B5A8A020F32DEE2F }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_CBF0DDD18E0A47DC83EFDE5B4EA9F28E }}
-
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'projectwebapp'
-          slot-name: 'Production'
-          package: .
+    - name: Deploy to Azure Web App
+      run: |
+        # Add your deployment steps here
+        echo "Deploying React App to Azure Web App"
+        # Example: az webapp deployment source config --name <app_name> --resource-group <resource_group> --src-path ./build
